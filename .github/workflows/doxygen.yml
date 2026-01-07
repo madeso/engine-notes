@@ -31,7 +31,7 @@ jobs:
       - name: Build Animation
         run: doxygen animation.doxygen
       - name: Build Entity
-        run: doxygen enity.doxygen
+        run: doxygen entity.doxygen
       - name: Build Scripting
         run: doxygen level-scripting.doxygen
       - name: Upload artifact
