@@ -1,18 +1,3 @@
-// "ecs" strcutrure: https://www.youtube.com/watch?v=jjEsB611kxs&t=7072s
-/*
-Dictionary:
-    Entity Component System
-    ECS - Individual unique entities which have components
-    ECS appear mostly in dedicated engines
-
-    Actor Component System
-    ACS - Precomposed actors with components and behaviours
-    UE uses ACS
-
-    Script Component System
-    SCS - Game objects described wholely by scripts or sometimes an amalgamation of scripts and ECS-style components
-    Unity uses SCS
-*/
 #include <vector>
 #include <string>
 #include <cassert>
@@ -65,6 +50,28 @@ namespace core
         }
     }
 }
+
+
+/** \addtogroup entity Entity Components
+ * \brief A "ECS"
+ * 
+ * Reference: https://www.youtube.com/watch?v=jjEsB611kxs&t=7072s
+ 
+ * ## Design thoughts:
+ * Should we have a single instance or a per-entity instance.
+ * Currently it's written as a per-entity instance.
+ * 
+ * ### Pro:
+ * * Simpler
+ * * We can be sure it's thread safe as it won't integrate with other streads
+ * 
+ * ### Cons:
+ * * Ugly
+ * * Wastes memory as we need a instance of the system per entity
+ * 
+ *  @{
+*/
+
 
 namespace entity
 {
@@ -162,7 +169,7 @@ namespace entity
     };
 
 
-    // assume there's a Alive called alive on T
+    /// assumes there's a Alive called alive on T
     template<typename T>
     void update_and_remove_alives
     (
@@ -437,21 +444,24 @@ namespace entity
         /// @todo move to a entity sytem type
         virtual RequestedComponents get_component_requests() = 0;
 
-        /*
-        design thought: who removes this from the update list when it's destroyed?
-        better to return a register request and let the caller add/remove stages+prios to the update list?
+        /**
+         * ## Design thought:
+         * 
+         * Who removes this from the update list when it's destroyed?
+         * Better to return a register request and let the caller add/remove stages+prios to the update list?
         */
         virtual void register_updates(EntitySystemUpdate* updates) = 0;
 
         /// Called by EntitySystemUpdate
         virtual void update(UpdateStage stage) = 0;
 
-        /*
-        design thoughts:
-        should we get a callback for each component, or a general... here is a the latest state of the components you care about
-        current setup is probably easier to implement but requirements could be different from actual usage
-
-        keep in mind that the system is per entity so it's just getting references to components and storing them as member variables
+        /**
+         * ## Design thoughts:
+         * 
+         * Should we get a callback for each component, or a general... here is a the latest state of the components you care about.
+         * The current setup is probably easier to implement but requirements could be different from actual usage
+         * 
+         * Keep in mind that the system is per entity so it's just getting references to components and storing them as member variables
         */
 
         /// a component was added or activated on the entity
@@ -480,22 +490,6 @@ namespace entity
     private:
         std::unordered_map<core::HashedStringView, const EntitySystemType*> types;
     };
-
-
-    /*
-    Design thoughts: should we have a single instance or a per-entity instance.
-    Currently it's written as a per-entity instance.
-
-    Pro:
-    * Simpler
-    * We can be sure it's thread safe as it won't integrate with other streads
-
-    Cons:
-    * Ugly
-    * Wastes memory as we need a instance of the system per entity
-
-
-    */
 
     /** A global system for the world.
      * 
@@ -909,6 +903,11 @@ namespace entity
     }
 #endif
 }
+
+
+/**
+ * @}
+*/
 
 int main(int arc, char** argv)
 {

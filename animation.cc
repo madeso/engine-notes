@@ -17,6 +17,13 @@ vec3 operator+(vec3, vec3);
 quat operator*(quat, quat);
 void assert(bool);
 
+/** \addtogroup animation Animation engine
+ * \brief A flexible animation engine
+ * @{
+*/
+namespace animation
+{
+
 /*
 # Dictionary
 * skinning = mesh vertices weighted agains some set of world space transforms ("bones"), all "bones" are in world space, no hierchy/skeleton
@@ -290,3 +297,10 @@ struct EventData
 // can recalc if target is moving
 
 // can use motion warping to fix motion matching
+
+}
+
+
+/**
+ * @}
+*/

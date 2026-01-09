@@ -3,7 +3,27 @@
 // Simple and Scalable Game AI Decision Making: https://www.youtube.com/watch?v=5ZXfDFb4dzc
 
 /**
- * \defgroup actuation actuation / execution / action layer
+ * \defgroup ai AI engine
+ * @{
+ */
+
+ /** \defgroup actuation actuation / execution / action layer
+ *  @ingroup ai
+ */
+/** \defgroup knowledge perception / knowledge
+ *  @ingroup ai
+ */
+/** \defgroup decisionmaking decision making
+ *  @ingroup ai
+ */
+
+namespace ai {}
+/**@}*/
+
+namespace ai {
+
+/**
+ * \addtogroup actuation actuation / execution / action layer
  * @{
  */
 
@@ -100,7 +120,7 @@ struct MoveToAction : Action
 
 /**@}*/
 /**
- * \defgroup knowledge perception / knowledge
+ * \addtogroup knowledge
  * @{
  */
 
@@ -258,7 +278,7 @@ struct SharedInformation
 /**@}*/
 
 /**
- * \defgroup decisionmaking decision making
+ * \addtogroup decisionmaking
  * @{
  */
 
@@ -553,3 +573,6 @@ void behavior_selection(Agent* agent)
 //  scripted encounter adjustments
 
 /**@}*/
+
+}
+

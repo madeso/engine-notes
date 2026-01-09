@@ -1,18 +1,23 @@
-// this is based on a lost scripting system based on xml I made a long time ago
-// it is also expanded with ideas (states, events and multi tasking) from naught dog: https://www.gdcvault.com/play/1730/State-Based-Scripting-in-UNCHARTED
-// this has notes about optimizing/a better implementation than the notes below
-// todo(Gustav): look into half life alyx scripting: https://twitter.com/ImplicitAction/status/1355319716517007361
-
-/*
-Where used:
-Gameplay scripting system
-
-*/
-
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <functional>
+
+/** \addtogroup scripting Level Scripting
+ * \brief A simple system to script behaviours in levels.
+ * 
+ * This is based on a lost scripting system based on xml I made a long time ago.
+ * It is also expanded with ideas (states, events and multi tasking) from naught dog: https://www.gdcvault.com/play/1730/State-Based-Scripting-in-UNCHARTED
+ * 
+ * Where it could be used:
+ * - Gameplay scripting system
+ * 
+ * \todo look into half life alyx scripting: https://twitter.com/ImplicitAction/status/1355319716517007361
+ * 
+ *  @{
+*/
+
+namespace level_script {
 
 struct HashedString {};
 struct Value {};
@@ -53,11 +58,11 @@ struct TrackList : Command
 {
 };
 
-// converts a <WaitForSeconds Time="1000"/> to a Command
+/// Converts a `<WaitForSeconds Time="1000"/>` to a Command
 using CommandParser = std::function<Command* (const std::unordered_map<std::string, Value>&)>;
 using CommandMap = std::unordered_map<std::string, CommandParser>;
 
-// events: could be a regular event, a update event, or enter/leave area event or implicit begin/end state event
+/// A event could be a "regular" event, a update event, or enter/leave area event or implicit begin/end state event
 struct EventHandler
 {
     std::vector<Command*> commands;
@@ -68,7 +73,7 @@ struct State
     std::unordered_map<std::string, EventHandler> on_event;
 };
 
-/** Represents a script
+/** Represents a script.
  * Scripts can be assigned to a
  * object
  * Trigger Volume: with enter, exit and ocupancy events
@@ -390,3 +395,8 @@ struct Script
     int current_state = 0;
 };
 
+}
+
+/**
+ * @}
+*/
