@@ -27,13 +27,7 @@ jobs:
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
       - name: Build AI
-        run: doxygen ai.doxygen
-      - name: Build Animation
-        run: doxygen animation.doxygen
-      - name: Build Entity
-        run: doxygen entity.doxygen
-      - name: Build Scripting
-        run: doxygen level-scripting.doxygen
+        run: doxygen doxygen/doxygen
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
