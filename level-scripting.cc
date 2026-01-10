@@ -53,6 +53,28 @@ Example with player and friend shaking hands
     </On>
 </State>
 ```
+
+```kdl
+state shake-hands {
+    on begin {
+        TrackList {
+            track {
+                WaitMoveTo player waypoint
+                signal player-at-waypoint
+                WaitForSignal friend-at-waypoint
+                WaitAnimate player shake-friend-hand
+            }
+            track {
+                WaitMoveTo friend waypoint
+                Signal friend-at-waypoint
+                WaitForSignal player-at-waypoint
+                WaitAnimate friend shake-player-hand
+            }
+        }
+    }
+}
+```
+
 */
 struct TrackList : Command
 {
@@ -121,6 +143,39 @@ struct State
         </On>
     </State>
 </Script>
+```
+
+```kdl
+script falling-sign {
+    state untouched {
+        on update {
+            if {
+                condition {
+                    task-complete wz-post-combat
+                }
+                go fallen
+            }
+        }
+       on hanging-from {
+            go breaking
+        }
+    }
+
+    state breaking {
+        on begin {
+            spawn-particles self sign-break-dust at-joint="hinge"
+            wait-animate self sign-break
+            go fallen
+       }
+    }
+
+    state fallen {
+        on begin {
+            note "looping"
+            animate self sign-broken
+        }
+    }
+}
 ```
 
 ## Example: Falling sign
