@@ -146,33 +146,44 @@ struct State
 ```
 
 ```kdl
-script falling-sign {
-    state untouched {
+script kickable-gate initial_state="locked"
+    variables {
+        int32 num-attempts
+        bool is-locked value=#true
+    }
+    // properties can be configured in the editor
+    properties {
+        property kick-anim default="gate-kick"
+    }
+    state locked {
+        on kick {
+            go kicked
+        }
+        on begin {
+            print "starting idle"
+            animate self locked-idle
+        }
         on update {
-            if {
-                condition {
-                    task-complete wz-post-combat
+            ...
+        }
+    }
+    state kicked {
+        on begin {
+            if is_locked {
+                set num-attempts {
+                    add {
+                        constant 1
+                        variable num-attempts
+                    }
                 }
-                go fallen
+                wait-animate self kick-failure
+                go locked
             }
-        }
-       on hanging-from {
-            go breaking
-        }
-    }
 
-    state breaking {
-        on begin {
-            spawn-particles self sign-break-dust at-joint="hinge"
-            wait-animate self sign-break
-            go fallen
-       }
-    }
-
-    state fallen {
-        on begin {
-            note "looping"
-            animate self sign-broken
+            // commands are stripped but visible in gui editor
+            note value="else..."
+            wait-animate self kick-success
+            go open
         }
     }
 }
@@ -210,6 +221,40 @@ script falling-sign {
         </On>
     </State>
 </Script>
+```
+
+
+```kdl
+script falling-sign {
+    state untouched {
+        on update {
+            if {
+                condition {
+                    task-complete wz-post-combat
+                }
+                go fallen
+            }
+        }
+       on hanging-from {
+            go breaking
+        }
+    }
+
+    state breaking {
+        on begin {
+            spawn-particles self sign-break-dust at-joint="hinge"
+            wait-animate self sign-break
+            go fallen
+       }
+    }
+
+    state fallen {
+        on begin {
+            note "looping"
+            animate self sign-broken
+        }
+    }
+}
 ```
 
 ## Example: Falling sign (generic)
@@ -336,6 +381,33 @@ script falling-sign {
         )
     )
 )
+```
+
+```json
+[script falling-sign
+    [state untouched
+        [on update
+            [when [task-complete {name: wz-post-combat}]
+                [go fallen]
+            ]
+        ]
+        [on hanging-from
+            [go breaking]
+        ]
+    ]
+    [state breaking
+        [on begin
+            [spawn-particles-at-joint self hinge sign-break-dust]
+            [wait-animate self sign-break]
+            [go fallen]
+       ]
+    ]
+    [state fallen
+        [on begin
+            [animate self sign-broken]
+        ]
+    ]
+]
 ```
 
 ## Example: Falling sign (generic)
