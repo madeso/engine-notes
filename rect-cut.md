@@ -57,6 +57,27 @@ Rect r4 = cut_right(&layout, 16);
 Rect r5 = cut_right(&layout, 16);
 ```
 
+<svg width="720" height="64">
+    <!-- background -->
+    <rect x="0" y="0" width="720" height="64" fill="lightgray" />
+    <!-- 64 size, place at 64*i+2 -->
+    <!-- 1 -->
+    <rect x="2" y="2" width="60" height="60" stroke="black" fill="transparent" stroke-width="2"/>
+    <text x="4" y="4" fill="black" text-anchor="start" dominant-baseline="text-before-edge">1</text>
+    <!-- 2 -->
+    <rect x="64" y="2" width="60" height="60" stroke="black" fill="transparent" stroke-width="2"/>
+    <text x="68" y="4" fill="black" text-anchor="start" dominant-baseline="text-before-edge">2</text>
+    <!-- 3 -->
+    <rect x="126" y="2" width="60" height="60" stroke="black" fill="transparent" stroke-width="2"/>
+    <text x="128" y="4" fill="black" text-anchor="start" dominant-baseline="text-before-edge">3</text>
+    <!-- 4 -->
+    <rect x="658" y="2" width="60" height="60" stroke="black" fill="transparent" stroke-width="2"/>
+    <text x="662" y="4" fill="black" text-anchor="start" dominant-baseline="text-before-edge">4</text>
+    <!-- 5 -->
+    <rect x="596" y="2" width="60" height="60" stroke="black" fill="transparent" stroke-width="2"/>
+    <text x="600" y="4" fill="black" text-anchor="start" dominant-baseline="text-before-edge">5</text>
+</svg>
+
 ![](rect-cut-01-toolbar.gif)
 
 ## Example: Two panel application
