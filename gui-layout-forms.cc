@@ -4,8 +4,20 @@
    It doesn't handle all layouts but is easy to understand and easy
    to tweak in a wysiwyg layout editor.
 */
-#include <cassert>
-#include <optional>
+#include <variant>
+
+// simple match lib
+template<class... Ts>
+struct overloads : Ts... { using Ts::operator()...; };
+template<typename T> struct Matcher
+{
+    T v;
+    auto operator<<(auto c)
+    { return std::visit(c, v); }
+    auto operator<<(const auto& c) const
+    { return std::visit(c, v); }
+};
+#define MATCH(t) Matcher{t} << overloads
 
 struct Size {
     int cx;
@@ -17,134 +29,109 @@ struct Rect {
     int top;
     int right;
     int bottom;
-
-    Size Size() const;
 };
 
-enum class Anchor
+
+Size size_of(const Rect& r) {
+    return {
+        .cx = r.right - r.left,
+        .cy = r.top - r.bottom
+    };
+};
+
+// todo(Gustav): cz: bitfield with invalid values? how to parse to/from c?
+enum class HorizontalAnchor {left, right, both};
+enum class VerticalAnchor {top, bottom, both};
+struct Anchor
 {
-    Top = 0x1 << 1,
-    Bottom = 0x1 << 2,
-    Left = 0x1 << 3,
-    Right = 0x1 << 4,
-
-    TopLeft = Top | Left,
-    TopLeftRight = Top | Left | Right,
-    TopRight = Top | Right,
-    BottomLeft = Bottom | Left,
-    BottomLeftRight = Bottom | Left | Right,
-    BottomRight = Bottom | Right,
-    TopBottomRight = Top | Bottom | Right,
-    TopBottomLeft = Top | Bottom | Left,
-    All = Top | Bottom | Left | Right
+    HorizontalAnchor horizontal;
+    VerticalAnchor vertical;
 };
-bool operator&(Anchor, Anchor);
+
+
+struct HorizontalLeft {int left_offset; int width; };
+struct HorizontalRight {int right_offset; int width; };
+struct HorizontalBoth {int left_offset; int right_offset;};
+using HorizontalSizeInfo = std::variant<HorizontalLeft, HorizontalRight, HorizontalBoth>;
+    
+struct VerticalTop { int top_offset; int height;};
+struct VerticalBottom { int bottom_offset; int height;};
+struct VerticalBoth { int top_offset; int bottom_offset;};
+using VerticalSizeInfo = std::variant<VerticalTop, VerticalBottom, VerticalBoth>;
 
 struct SizeInfo
 {
-    // horizontal data is either {left+width} {right+width} {left+right}
-    // vertical data is either {top+height} {bottom+height} {top+bottom}
-
-    // specify desired offset from the respective edge
-    std::optional<int> left;
-    std::optional<int> top;
-    std::optional<int> right;
-    std::optional<int> bottom;
-
-    // if set, specify the fixed widget size
-    std::optional<int> width;
-    std::optional<int> height;
+    HorizontalSizeInfo horizontal;
+    VerticalSizeInfo vertical;
 };
 
-SizeInfo size_info_from_design_information(const Rect& widget_rect, Anchor anchor, Rect design_size)
+SizeInfo size_info_from_design_information(const Rect& widget_rect, Anchor anchor, const Rect& design_size)
 {
-    std::optional<int> left; std::optional<int> right;
-    std::optional<int> top; std::optional<int> bottom;
+    const auto size = size_of(widget_rect);
 
-    int vertical = 0;
-    int horizontal = 0;
-
-    if (anchor & Anchor::Left)
-    {
-        left = widget_rect.left - design_size.left;
-        horizontal += 1;
-    }
-    if (anchor & Anchor::Right)
-    {
-        right = design_size.right - widget_rect.right;
-        horizontal += 1;
-    }
-    if (anchor & Anchor::Top)
-    {
-        top = widget_rect.top - design_size.top;
-        vertical += 1;
-    }
-    if (anchor & Anchor::Bottom)
-    {
-        bottom = design_size.bottom - widget_rect.bottom;
-        vertical += 1;
-    }
-
-    assert(horizontal > 0 && "need to set at least 1 horizontal");
-    assert(vertical > 0 && "need to set at least 1 vertical");
-
-    const auto size = widget_rect.Size();
-    const auto dx = horizontal < 2 ? std::optional<int>{size.cx} : std::nullopt;
-    const auto dy = vertical < 2 ? std::optional<int>{size.cy} : std::nullopt;
-    return {left, top, right, bottom, dx, dy};
+    const auto horizontal = ([&]() -> HorizontalSizeInfo {
+        const auto left_offset = widget_rect.left - design_size.left;
+        const auto right_offset = design_size.right - widget_rect.right;
+        const auto width = size.cx;
+        switch(anchor.horizontal) {
+        case HorizontalAnchor::left: return HorizontalLeft { left_offset, width };
+        case HorizontalAnchor::right: return HorizontalRight { right_offset, width };
+        case HorizontalAnchor::both: return HorizontalBoth { left_offset, right_offset };
+        }
+    })();
+    const auto vertical = ([&]() -> VerticalSizeInfo {
+        const auto top_offset = widget_rect.top - design_size.top;
+        const auto bottom_offset = design_size.bottom - widget_rect.bottom;
+        const auto height = size.cy;
+        switch(anchor.vertical) {
+        case VerticalAnchor::top: return VerticalTop{top_offset, height};
+        case VerticalAnchor::bottom: return VerticalBottom{bottom_offset, height};
+        case VerticalAnchor::both: return VerticalBoth{top_offset, bottom_offset};
+        }
+    })();
+    
+    return {horizontal, vertical};
 }
+
+struct LeftRight {int left; int right;};
+struct TopBottom {int top; int bottom;};
+
+int calc_left(const Rect& window_size, int left_offset) { return left_offset + window_size.left; }
+int calc_right(const Rect& window_size, int right_offset) { return window_size.right - right_offset; }
+int calc_top(const Rect& window_size, int top_offset) { return top_offset + window_size.top; }
+int calc_bottom(const Rect& window_size, int bottom_offset) { return window_size.bottom - bottom_offset; }
 
 Rect position_widget(const SizeInfo& info, const Rect& window_size)
 {
-    std::optional<int> left; std::optional<int> right;
-    std::optional<int> top; std::optional<int> bottom;
-
-    if (info.left)
+    const LeftRight lr = MATCH(info.horizontal)
     {
-        left = *info.left + window_size.left;
-    }
-    if (info.right)
-    {
-        right = window_size.right - *info.right;
-    }
-    if (info.width)
-    {
-        if (right)
-        {
-            left = *right - *info.width;
+        [&](HorizontalLeft& d) {
+            const auto left = calc_left(window_size, d.left_offset);
+            return LeftRight{left, left + d.width};
+        },
+        [&](HorizontalRight& d) {
+            const auto right = calc_right(window_size, d.right_offset);
+            return LeftRight{right - d.width, right};
+        },
+        [&](HorizontalBoth& d) {
+            return LeftRight{calc_left(window_size, d.left_offset), calc_right(window_size, d.right_offset)};
         }
-        else
-        {
-            assert(left);
-            right = *left + *info.width;
-        }
-    }
+    };
 
-    if (info.top)
+    const TopBottom tb = MATCH(info.vertical)
     {
-        top = *info.top + window_size.top;
-    }
-    if (info.bottom)
-    {
-        bottom = window_size.bottom - *info.bottom;
-    }
-
-    if (info.height)
-    {
-        if (bottom)
-        {
-            top = *bottom - *info.height;
+        [&](const VerticalTop& d) {
+            const auto top = calc_top(window_size, d.top_offset);
+            return TopBottom{top, top + d.height};
+        },
+        [&](const VerticalBottom& d) {
+            const auto bottom = calc_bottom(window_size, d.bottom_offset);
+            return TopBottom{bottom - d.height, bottom};
+        },
+        [&](const VerticalBoth& d) {
+            return TopBottom{calc_top(window_size, d.top_offset), calc_bottom(window_size, d.bottom_offset)};
         }
-        else
-        {
-            assert(top);
-            bottom = *top + *info.height;
-        }
-    }
+    };
 
-    assert(left); assert(right);
-    assert(top); assert(bottom);
-
-    return {*left, *top, *right, *bottom};
+    return {lr.left, tb.top, lr.right, tb.bottom};
 }
-
