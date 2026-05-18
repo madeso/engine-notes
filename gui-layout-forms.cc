@@ -12,9 +12,7 @@ struct overloads : Ts... { using Ts::operator()...; };
 template<typename T> struct Matcher
 {
     T v;
-    auto operator<<(auto c)
-    { return std::visit(c, v); }
-    auto operator<<(const auto& c) const
+    decltype(auto) operator<<(const auto& c)
     { return std::visit(c, v); }
 };
 #define MATCH(t) Matcher{t} << overloads
