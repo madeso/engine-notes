@@ -13,6 +13,8 @@
  * - Gameplay scripting system
  * 
  * \todo look into half life alyx scripting: https://twitter.com/ImplicitAction/status/1355319716517007361
+ * \todo can we expand/combine this with the conversation system?
+ * \todo can we expand this with the usecase for InfScript and io systems? https://github.com/search?q=repo%3Amadeso%2Finfection+InfScript&type=code https://www.joewintergreen.com/i-o-systems-for-level-scripting/ 
  * 
  *  @{
 */
